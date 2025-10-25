@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+<div class="row">
+<div class="col-md-6">
+<h5>Daily Spending</h5>
+<canvas id="dailyChart"></canvas>
+</div>
+<div class="col-md-6">
+<h5>Monthly Expenses</h5>
+<canvas id="monthlyChart"></canvas>
+</div>
+</div>
+<div class="row mt-4">
+<div class="col-md-6">
+<h5>Category Breakdown</h5>
+<canvas id="categoryChart"></canvas>
+</div>
+<!-- <div class="col-md-6">
+<h5>Budget Status</h5>
+<div class="alert alert-success">You are within budget.</div>
+</div> -->
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Data injected from server
+const dailyLabels = {{ daily_labels|tojson }};
+const dailyData = {{ daily_values|tojson }};
+const monthlyLabels = {{ monthly_labels|tojson }};
+const monthlyData = {{ monthly_values|tojson }};
+const categoryLabels = {{ category_labels|tojson }};
+const categoryData = {{ category_values|tojson }};
+
+// Daily Chart
+const dailyCtx = document.getElementById('dailyChart');
+new Chart(dailyCtx, {
+	type: 'line',
+	data: {
+		labels: dailyLabels,
+		datasets: [{
+			label: 'Daily Spending',
+			data: dailyData,
+			borderColor: 'blue',
+			backgroundColor: 'rgba(0, 123, 255, 0.3)'
+		}]
+	}
+});
+
+// Monthly Chart
+const monthlyCtx = document.getElementById('monthlyChart');
+new Chart(monthlyCtx, {
+	type: 'bar',
+	data: {
+		labels: monthlyLabels,
+		datasets: [{
+			label: 'Monthly Expenses',
+			data: monthlyData,
+			backgroundColor: 'rgba(40, 167, 69, 0.6)'
+		}]
+	}
+});
+
+// Category Chart
+const categoryCtx = document.getElementById('categoryChart');
+const palette = ['rgba(255,99,132,0.6)','rgba(54,162,235,0.6)','rgba(255,206,86,0.6)','rgba(75,192,192,0.6)','rgba(153,102,255,0.6)'];
+new Chart(categoryCtx, {
+	type: 'pie',
+	data: {
+		labels: categoryLabels,
+		datasets: [{
+			data: categoryData,
+			backgroundColor: categoryLabels.map((_, i) => palette[i % palette.length])
+		}]
+	}
+});
+</script>
+{% endblock %}
