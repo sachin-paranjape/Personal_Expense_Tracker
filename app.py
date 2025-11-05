@@ -194,6 +194,56 @@ def dashboard():
                            category_values=category_values)
 
 
+@app.route('/edit/<int:exp_id>', methods=['GET', 'POST'])
+@login_required
+def edit_expense(exp_id):
+    expense = Expense.query.get_or_404(exp_id)
+    if expense.user_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('view_expenses'))
+
+    if request.method == 'POST':
+        date_str = request.form.get('date')
+        category = request.form.get('category')
+        amount = request.form.get('amount')
+        description = request.form.get('description', '').strip()
+
+        if not date_str or not category or not amount:
+            flash('All fields are required.', 'danger')
+            return redirect(url_for('edit_expense', exp_id=exp_id))
+
+        try:
+            exp_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            amount_val = float(amount)
+        except Exception:
+            flash('Invalid input. Check date and amount formats.', 'danger')
+            return redirect(url_for('edit_expense', exp_id=exp_id))
+
+        expense.date = exp_date
+        expense.category = category
+        expense.amount = amount_val
+        expense.description = description
+
+        db.session.commit()
+        flash('Expense updated successfully.', 'success')
+        return redirect(url_for('view_expenses'))
+
+    return render_template('edit_expense.html', expense=expense)
+
+
+@app.route('/delete/<int:exp_id>', methods=['POST'])
+@login_required
+def delete_expense(exp_id):
+    expense = Expense.query.get_or_404(exp_id)
+    if expense.user_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('view_expenses'))
+
+    db.session.delete(expense)
+    db.session.commit()
+    flash('Expense deleted.', 'info')
+    return redirect(url_for('view_expenses'))
+
 if __name__ == "__main__":
     # Ensure database tables exist
     with app.app_context():
