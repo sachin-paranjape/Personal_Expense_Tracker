@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, LoginManager, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date, timedelta
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import numpy as np
 
 app = Flask(__name__)
 
@@ -43,6 +46,15 @@ class Expense(db.Model):
     description = db.Column(db.Text, nullable=True)
 
     user = db.relationship('User', backref=db.backref('expenses', lazy=True))
+
+
+class Budget(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    category = db.Column(db.String(80), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    __table_args__ = (db.UniqueConstraint('user_id', 'category', name='_user_category_uc'),)
+
 
 
 
@@ -185,13 +197,115 @@ def dashboard():
     category_labels = list(cat_map.keys())
     category_values = [round(cat_map[k], 2) for k in category_labels]
 
+    
+    # --- Prediction Logic ---
+    prediction, pred_msg = get_prediction(current_user.id)
+
+    # --- Budget Logic ---
+    budgets = Budget.query.filter_by(user_id=current_user.id).all()
+    budget_report = []
+    
+    # Get current month expenses per category
+    current_month_expenses = [e for e in expenses if e.date.year == today.year and e.date.month == today.month]
+    curr_cat_map = {}
+    for e in current_month_expenses:
+        curr_cat_map[e.category] = curr_cat_map.get(e.category, 0) + e.amount
+
+    for b in budgets:
+        spent = curr_cat_map.get(b.category, 0)
+        percent = 0
+        if b.amount > 0:
+            percent = (spent / b.amount) * 100
+        
+        status_color = "success"
+        if percent > 90:
+            status_color = "danger"
+        elif percent > 75:
+            status_color = "warning"
+            
+        budget_report.append({
+            'category': b.category,
+            'limit': b.amount,
+            'spent': spent,
+            'percent': min(percent, 100),
+            'display_percent': min(percent, 100),
+            'status_color': status_color,
+            'is_over': (spent > b.amount)
+        })
+
+
     return render_template('dashboard.html',
                            daily_labels=daily_labels,
                            daily_values=daily_values,
                            monthly_labels=monthly_labels,
                            monthly_values=monthly_values,
                            category_labels=category_labels,
-                           category_values=category_values)
+                           category_values=category_values,
+                           prediction=prediction,
+                           pred_msg=pred_msg,
+                           budget_report=budget_report)
+
+@app.route('/budget', methods=['GET', 'POST'])
+@login_required
+def manage_budget():
+    if request.method == 'POST':
+        category = request.form.get('category')
+        amount = request.form.get('amount')
+        
+        if not category or not amount:
+            flash("All fields required", "danger")
+            return redirect(url_for('manage_budget'))
+
+        try:
+            amount_val = float(amount)
+        except:
+            flash("Invalid amount", "danger")
+            return redirect(url_for('manage_budget'))
+            
+        # Check if budget exists
+        budget = Budget.query.filter_by(user_id=current_user.id, category=category).first()
+        if budget:
+            budget.amount = amount_val
+            flash(f"Updated budget for {category}.", "success")
+        else:
+            budget = Budget(user_id=current_user.id, category=category, amount=amount_val)
+            db.session.add(budget)
+            flash(f"Set budget for {category}.", "success")
+        
+        db.session.commit()
+        return redirect(url_for('dashboard'))
+
+    # Show current budgets
+    budgets = Budget.query.filter_by(user_id=current_user.id).all()
+    return render_template('add_budget.html', budgets=budgets)
+
+
+def get_prediction(user_id):
+    expenses = Expense.query.filter_by(user_id=user_id).all()
+    
+    if not expenses:
+        return 0.0, "Not enough data."
+
+    data = []
+    for e in expenses:
+        month_id = e.date.year * 12 + e.date.month
+        data.append({'month_id': month_id, 'amount': e.amount})
+    
+    df = pd.DataFrame(data)
+    monthly_data = df.groupby('month_id')['amount'].sum().reset_index()
+    
+    if len(monthly_data) < 2:
+        return 0.0, "Need 2+ months of data."
+
+    X = monthly_data[['month_id']]
+    y = monthly_data['amount']
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    next_month_id = monthly_data['month_id'].max() + 1
+    pred_val = model.predict([[next_month_id]])[0]
+    return max(0, round(pred_val, 2)), "Based on spending trend."
 
 
 @app.route('/edit/<int:exp_id>', methods=['GET', 'POST'])
@@ -243,6 +357,15 @@ def delete_expense(exp_id):
     db.session.commit()
     flash('Expense deleted.', 'info')
     return redirect(url_for('view_expenses'))
+
+
+@app.route('/predict')
+@login_required
+def predict_expense():
+    # Deprecated: Redirecting to dashboard now
+    return redirect(url_for('dashboard'))
+
+
 
 if __name__ == "__main__":
     # Ensure database tables exist
