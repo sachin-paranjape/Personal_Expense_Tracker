@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>Manage Monthly Budgets</h2>
+        <div class="card mb-4">
+            <div class="card-header">Set Budget for Category</div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('manage_budget') }}">
+                    <div class="mb-3">
+                        <label>Category</label>
+                        <select name="category" class="form-control">
+                            <option>Food</option>
+                            <option>Travel</option>
+                            <option>Shopping</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Monthly Limit Amount</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" required>
+                    </div>
+                    <button class="btn btn-success" type="submit">Set Budget</button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+                </form>
+            </div>
+        </div>
+
+        <h4>Your Current Budgets</h4>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Monthly Limit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in budgets %}
+                <tr>
+                    <td>{{ b.category }}</td>
+                    <td>₹{{ b.amount }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2" class="text-muted">No budgets set yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

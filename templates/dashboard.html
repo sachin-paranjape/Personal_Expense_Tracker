@@ -1,79 +1,111 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Dashboard</h2>
+
+<!-- Prediction Section -->
+<div class="card mb-4 border-info">
+	<div class="card-body">
+		<h5 class="card-title text-info">Predicted Expense for Next Month</h5>
+		{% if prediction > 0 %}
+		<h2 class="display-6">₹{{ prediction }}</h2>
+		<p class="text-muted small">{{ pred_msg }}</p>
+		{% else %}
+		<p class="text-muted">{{ pred_msg }}</p>
+		{% endif %}
+	</div>
+</div>
 <div class="row">
-<div class="col-md-6">
-<h5>Daily Spending</h5>
-<canvas id="dailyChart"></canvas>
-</div>
-<div class="col-md-6">
-<h5>Monthly Expenses</h5>
-<canvas id="monthlyChart"></canvas>
-</div>
+	<div class="col-md-6">
+		<h5>Daily Spending</h5>
+		<canvas id="dailyChart"></canvas>
+	</div>
+	<div class="col-md-6">
+		<h5>Monthly Expenses</h5>
+		<canvas id="monthlyChart"></canvas>
+	</div>
 </div>
 <div class="row mt-4">
-<div class="col-md-6">
-<h5>Category Breakdown</h5>
-<canvas id="categoryChart"></canvas>
-</div>
-<!-- <div class="col-md-6">
-<h5>Budget Status</h5>
-<div class="alert alert-success">You are within budget.</div>
-</div> -->
+	<div class="col-md-6">
+		<h5>Category Breakdown</h5>
+		<canvas id="categoryChart"></canvas>
+	</div>
+	<div class="col-md-6">
+		<h5>Budget Status (Current Month)</h5>
+		{% if budget_report %}
+		{% for b in budget_report %}
+		<div class="mb-3">
+			<div class="d-flex justify-content-between">
+				<span><strong>{{ b.category }}</strong></span>
+				<span class="text-{{ b.status_color }}">₹{{ b.spent }} / {{ b.limit }}</span>
+			</div>
+			<div class="progress">
+				<div class="progress-bar bg-{{ b.status_color }}" role="progressbar"
+					style="width: {{ b.display_percent }}%" aria-valuenow="{{ b.display_percent }}" aria-valuemin="0"
+					aria-valuemax="100"></div>
+			</div>
+			{% if b.is_over %}
+			<small class="text-danger fw-bold">Over Budget!</small>
+			{% endif %}
+		</div>
+		{% endfor %}
+		{% else %}
+		<p class="text-muted">No budgets set. <a href="{{ url_for('manage_budget') }}">Set a budget</a></p>
+		{% endif %}
+	</div>
 </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Data injected from server
-const dailyLabels = {{ daily_labels|tojson }};
-const dailyData = {{ daily_values|tojson }};
-const monthlyLabels = {{ monthly_labels|tojson }};
-const monthlyData = {{ monthly_values|tojson }};
-const categoryLabels = {{ category_labels|tojson }};
-const categoryData = {{ category_values|tojson }};
+	// Data injected from server
+	const dailyLabels = {{ daily_labels| tojson }};
+	const dailyData = {{ daily_values| tojson }};
+	const monthlyLabels = {{ monthly_labels| tojson }};
+	const monthlyData = {{ monthly_values| tojson }};
+	const categoryLabels = {{ category_labels| tojson }};
+	const categoryData = {{ category_values| tojson }};
 
-// Daily Chart
-const dailyCtx = document.getElementById('dailyChart');
-new Chart(dailyCtx, {
-	type: 'line',
-	data: {
-		labels: dailyLabels,
-		datasets: [{
-			label: 'Daily Spending',
-			data: dailyData,
-			borderColor: 'blue',
-			backgroundColor: 'rgba(0, 123, 255, 0.3)'
-		}]
-	}
-});
+	// Daily Chart
+	const dailyCtx = document.getElementById('dailyChart');
+	new Chart(dailyCtx, {
+		type: 'line',
+		data: {
+			labels: dailyLabels,
+			datasets: [{
+				label: 'Daily Spending',
+				data: dailyData,
+				borderColor: 'blue',
+				backgroundColor: 'rgba(0, 123, 255, 0.3)'
+			}]
+		}
+	});
 
-// Monthly Chart
-const monthlyCtx = document.getElementById('monthlyChart');
-new Chart(monthlyCtx, {
-	type: 'bar',
-	data: {
-		labels: monthlyLabels,
-		datasets: [{
-			label: 'Monthly Expenses',
-			data: monthlyData,
-			backgroundColor: 'rgba(40, 167, 69, 0.6)'
-		}]
-	}
-});
+	// Monthly Chart
+	const monthlyCtx = document.getElementById('monthlyChart');
+	new Chart(monthlyCtx, {
+		type: 'bar',
+		data: {
+			labels: monthlyLabels,
+			datasets: [{
+				label: 'Monthly Expenses',
+				data: monthlyData,
+				backgroundColor: 'rgba(40, 167, 69, 0.6)'
+			}]
+		}
+	});
 
-// Category Chart
-const categoryCtx = document.getElementById('categoryChart');
-const palette = ['rgba(255,99,132,0.6)','rgba(54,162,235,0.6)','rgba(255,206,86,0.6)','rgba(75,192,192,0.6)','rgba(153,102,255,0.6)'];
-new Chart(categoryCtx, {
-	type: 'pie',
-	data: {
-		labels: categoryLabels,
-		datasets: [{
-			data: categoryData,
-			backgroundColor: categoryLabels.map((_, i) => palette[i % palette.length])
-		}]
-	}
-});
+	// Category Chart
+	const categoryCtx = document.getElementById('categoryChart');
+	const palette = ['rgba(255,99,132,0.6)', 'rgba(54,162,235,0.6)', 'rgba(255,206,86,0.6)', 'rgba(75,192,192,0.6)', 'rgba(153,102,255,0.6)'];
+	new Chart(categoryCtx, {
+		type: 'pie',
+		data: {
+			labels: categoryLabels,
+			datasets: [{
+				data: categoryData,
+				backgroundColor: categoryLabels.map((_, i) => palette[i % palette.length])
+			}]
+		}
+	});
 </script>
 {% endblock %}
