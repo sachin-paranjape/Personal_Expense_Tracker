@@ -1,27 +1,55 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>All Expenses</h2>
-<table class="table table-striped">
-<thead>
-<tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr>
-</thead>
-<tbody>
-{% for exp in expenses %}
-<tr>
-    <td>{{ exp.date }}</td>
-    <td>{{ exp.category }}</td>
-    <td>{{ exp.description or '' }}</td>
-    <td>{{ '%.2f'|format(exp.amount) }}</td>
-    <td>
-        <a href="{{ url_for('edit_expense', exp_id=exp.id) }}" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
-        <form method="post" action="{{ url_for('delete_expense', exp_id=exp.id) }}" style="display:inline" onsubmit="return confirm('Delete this expense?');">
-            <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
-        </form>
-    </td>
-</tr>
-{% else %}
-<tr><td colspan="5">No expenses yet.</td></tr>
-{% endfor %}
-</tbody>
-</table>
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0 fw-bold text-primary">Expense History</h3>
+                <a href="{{ url_for('add_expense') }}" class="btn btn-primary rounded-pill shadow-sm"><i
+                        class="fas fa-plus me-2"></i>New Expense</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle glass-table">
+                    <thead class="text-secondary small text-uppercase">
+                        <tr>
+                            <th class="border-0">Date</th>
+                            <th class="border-0">Category</th>
+                            <th class="border-0">Description</th>
+                            <th class="border-0 text-end">Amount</th>
+                            <th class="border-0 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exp in expenses %}
+                        <tr class="border-bottom border-light">
+                            <td class="fw-medium text-muted">{{ exp.date }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ exp.category }}</span></td>
+                            <td class="text-truncate" style="max-width: 200px;">{{ exp.description or '-' }}</td>
+                            <td class="fw-bold text-end">₹{{ '%.2f'|format(exp.amount) }}</td>
+                            <td class="text-end">
+                                <a href="{{ url_for('edit_expense', exp_id=exp.id) }}"
+                                    class="btn btn-sm btn-icon btn-outline-primary rounded-circle me-1" title="Edit"><i
+                                        class="fas fa-pen"></i></a>
+                                <form method="post" action="{{ url_for('delete_expense', exp_id=exp.id) }}"
+                                    style="display:inline" onsubmit="return confirm('Delete this expense?');">
+                                    <button class="btn btn-sm btn-icon btn-outline-danger rounded-circle" title="Delete"
+                                        type="submit"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-receipt fa-2x mb-3 opacity-50"></i>
+                                <p>No expenses found. start tracking today!</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

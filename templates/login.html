@@ -1,15 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Login</h2>
-<form method="post" action="{{ url_for('login') }}">
-<div class="mb-3">
-<label for="username">Username</label>
-<input type="text" id="username" name="username" class="form-control">
+<div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+        <div class="glass-card p-5">
+            <h2 class="text-center mb-4 text-primary">Welcome Back</h2>
+            <form method="post" action="{{ url_for('login') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label text-muted">Username</label>
+                    <input type="text" id="username" name="username" class="form-control rounded-pill"
+                        placeholder="Enter username">
+                </div>
+                <div class="mb-4">
+                    <label for="pass" class="form-label text-muted">Password</label>
+                    <input type="password" id="pass" name="pass" class="form-control rounded-pill"
+                        placeholder="Enter password">
+                </div>
+                <div class="d-grid mb-3">
+                    <button class="btn btn-primary rounded-pill py-2 fw-bold shadow-sm" type="submit">Login</button>
+                </div>
+            </form>
+            <div class="text-center">
+                <p class="small text-muted mb-0">Don't have an account? <a href="{{ url_for('register') }}"
+                        class="text-decoration-none">Register</a></p>
+            </div>
+        </div>
+    </div>
 </div>
-<div class="mb-3">
-<label for="pass">Password</label>
-<input type="password" id="pass" name="pass" class="form-control">
-</div>
-<button class="btn btn-primary" type="submit">Login</button>
-</form>
 {% endblock %}

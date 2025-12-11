@@ -1,33 +1,49 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Register</h2>
-<form method="post" action="{{ url_for('register') }}">
-<div class="mb-3">
-<label for="name">Name</label>
-<input type="text" id="name" name="name" class="form-control">
+<div class="row justify-content-center">
+	<div class="col-md-6 col-lg-5">
+		<div class="glass-card p-5">
+			<h2 class="text-center mb-4 text-primary">Create Account</h2>
+			<form method="post" action="{{ url_for('register') }}">
+				<div class="mb-3">
+					<label for="name" class="form-label text-muted">Full Name</label>
+					<input type="text" id="name" name="name" class="form-control rounded-pill" placeholder="John Doe">
+				</div>
+				<div class="mb-3">
+					<label for="username" class="form-label text-muted">Username</label>
+					<input type="text" id="username" name="username" class="form-control rounded-pill"
+						placeholder="johndoe123">
+				</div>
+				<div class="mb-3">
+					<label for="pass" class="form-label text-muted">Password</label>
+					<input type="password" id="pass" name="pass" class="form-control rounded-pill"
+						placeholder="••••••••">
+				</div>
+				<div class="mb-4">
+					<label for="conf-pass" class="form-label text-muted">Confirm Password</label>
+					<input type="password" id="conf-pass" name="conf-pass" class="form-control rounded-pill"
+						placeholder="••••••••">
+				</div>
+				<div class="d-grid">
+					<button class="btn btn-primary rounded-pill py-2 fw-bold shadow-sm" type="submit">Register</button>
+				</div>
+			</form>
+			<div class="text-center mt-4">
+				<p class="small text-muted mb-0">Already have an account? <a href="{{ url_for('login') }}"
+						class="text-decoration-none">Login</a></p>
+			</div>
+		</div>
+	</div>
 </div>
-<div class="mb-3">
-<label for="username">Username</label>
-<input type="text" id="username" name="username" class="form-control">
-</div>
-<div class="mb-3">
-<label for="pass">Enter Password</label>
-<input type="password" id="pass" name="pass" class="form-control">
-</div>
-<div class="mb-3">
-<label for="conf-pass">Confirm Password</label>
-<input type="password" id="conf-pass" name="conf-pass" class="form-control">
-</div>
-<button class="btn btn-success" type="submit">Register</button>
-</form>
+
 <script>
-document.querySelector('form').addEventListener('submit', function(e) {
-	var pass = document.getElementById('pass').value;
-	var confPass = document.getElementById('conf-pass').value;
-	if (pass !== confPass) {
-		e.preventDefault();
-		alert('Passwords do not match. Please re-enter.');
-	}
-});
+	document.querySelector('form').addEventListener('submit', function (e) {
+		var pass = document.getElementById('pass').value;
+		var confPass = document.getElementById('conf-pass').value;
+		if (pass !== confPass) {
+			e.preventDefault();
+			alert('Passwords do not match. Please re-enter.');
+		}
+	});
 </script>
 {% endblock %}
